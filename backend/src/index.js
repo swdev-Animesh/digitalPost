@@ -12,6 +12,7 @@ dotenv.config();
 
 const app = express();
 
+const publicDir = path.join(process.cwd(), "public");
 
 app.use(clerkMiddleware());
 app.use(express.json());
@@ -21,16 +22,7 @@ app.use(cors({
 }));
 
 
-//code for serving files static docker and render 
-// 1. Serve static files compiled by React
-if (fs.existsSync(publicDir)) {
-app.use(express.static(path.join(publicDir, '../public')));
-}
-// API routes go here (e.g., app.use('/api/messages', messageRoutes))
-// 2. Fallback route: Send index.html for non-API requests (React Router support)
-app.get('*', (req, res,next) => {
-  res.sendFile(path.join(publicDir, '../public/index.html'));
-});
+
 
 
 
@@ -42,6 +34,15 @@ app.get("/",(req,res)=>{
 app.get("/health",(req,res)=>{
     res.status(200).json({status:"ok",header:req.headers})
 });
+//code for serving files static docker and render 
+// 1. Serve static files compiled by React
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+
+  app.get("/{*any}", (req, res, next) => {
+    res.sendFile(path.join(publicDir, "index.html"), (err) => next(err));
+  });
+}
 
 app.listen(process.env.PORT || 3000,async ()=>{
     try{
