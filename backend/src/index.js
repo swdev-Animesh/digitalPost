@@ -8,6 +8,8 @@ import fs from "fs";
 import ConnectDb from "./lib/DbConnect.js";
 import { clerkMiddleware, clerkClient, getAuth } from '@clerk/express'
 
+import { initHealthCheckCron } from './lib/cron.js'; 
+
 dotenv.config();
 
 const app = express();
@@ -26,13 +28,19 @@ app.use(cors({
 
 
 
-app.get("/",(req,res)=>{
-    res.status(201).send("Hello from backend");
-}
-); 
+// app.get("/",(req,res)=>{
+//     res.status(201).send("Hello from backend");
+// }
+// ); 
 
-app.get("/health",(req,res)=>{
-    res.status(200).json({status:"ok",header:req.headers})
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Server is healthy and running smoothly",
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(), // seconds the server has been running
+    environment: process.env.NODE_ENV 
+  });
 });
 //code for serving files static docker and render 
 // 1. Serve static files compiled by React
@@ -47,6 +55,10 @@ if (fs.existsSync(publicDir)) {
 app.listen(process.env.PORT || 3000,async ()=>{
     try{
         await ConnectDb();
+         if(process.env.NODE_ENV === 'production'){
+            const serverUrl = process.env.FRONTEND_URL;
+                 initHealthCheckCron(serverUrl);
+        }  
     }catch(err){
         console.log(err);
         process.exit(1);
