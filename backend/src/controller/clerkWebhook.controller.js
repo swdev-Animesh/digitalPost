@@ -54,6 +54,7 @@ import { verifyWebhook } from "@clerk/backend/webhooks";
 
     console.log("Received Clerk webhook event:");
     const signingSecret = process.env.CLERK_WEBHOOK_SECRET;
+     console.log(signingSecret, "1231243123signingSecret");
     if (!signingSecret) {
       res.status(503).json({ message: "Webhook secret is not provided" });
       return;
@@ -66,7 +67,7 @@ import { verifyWebhook } from "@clerk/backend/webhooks";
       headers: new Headers(req.headers),
       body: payload,
     });
-
+    console.log("Request prepared for Clerk webhook verification:", request);
     // throws if the signature is wrong or the body was tampered with; only then do we trust evt.
     const evt = await verifyWebhook(request, { signingSecret });
     console.log(`Clerk Webhook Received: ${evt.type} for User ID: ${evt.data.id}`);
