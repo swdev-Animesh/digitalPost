@@ -5,12 +5,15 @@ import cors from "cors";
 import path from "path";
 import fs from "fs";
 
+
 import ConnectDb from "./lib/DbConnect.js";
 import { clerkMiddleware, clerkClient, getAuth } from '@clerk/express'
 
 import { initHealthCheckCron } from './lib/cron.js'; 
 
 import clerkWebhookHandler from './webhook/clerk.webhook.js';
+
+import testRoutes from './routes/testRoutes.routes.js';
 
 dotenv.config();
 
@@ -46,6 +49,9 @@ app.get("/health", (req, res) => {
     environment: process.env.NODE_ENV 
   });
 });
+
+app.use('/api/test', testRoutes);
+
 //code for serving files static docker and render 
 // 1. Serve static files compiled by React
 if (fs.existsSync(publicDir)) {

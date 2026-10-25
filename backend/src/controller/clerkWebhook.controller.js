@@ -4,26 +4,28 @@ import { verifyWebhook } from "@clerk/backend/webhooks";
 
 export const clerkWebhookHandler = async (req, res) => {
     try{
-      console.log('Received Clerk webhook event:', req.body);
+      console.log('Received Clerk webhook event:');
         const secret = process.env.CLERK_WEBHOOK_SECRET;
 
         if(!secret){
             return res.status(500).json({error: "Webhook secret is not configured"});
         }
 
-        const eventType =  await verifyWebhook(req , {secret});
+        const evt = await verifyWebhook(req, { secret });
+
+        const eventType = evt.type;
+        const u = evt.data;
 
         
 
         const data = req.body;
         const payload = data.toString();
 
-        console.log(`Clerk Webhook Received: ${eventType} for User ID: ${id}`);
+        console.log(`Clerk Webhook Received: ${eventType} for User ID: ${u.id}`);
 
   
     // 6. Handle User Events & Sync MongoDB
     if (eventType === 'user.created') {
-         const u = eventType.data;
          const email =
         u.email_addresses?.find((e) => e.id === u.primary_email_address_id)?.email_address ??
         u.email_addresses?.[0]?.email_address;
@@ -36,9 +38,9 @@ export const clerkWebhookHandler = async (req, res) => {
         { clerkId: u.id, email, name, profileImage: u.image_url },
         { new: true, upsert: true, setDefaultsOnInsert: true },
       );
+      console.log(`User created and synced to MongoDB: ${name} (${email})`);
     }
     if (eventType === 'user.updated') {
-         const u = eventType.data;
          const email =
         u.email_addresses?.find((e) => e.id === u.primary_email_address_id)?.email_address ??
         u.email_addresses?.[0]?.email_address;
@@ -51,11 +53,12 @@ export const clerkWebhookHandler = async (req, res) => {
         { clerkId: u.id, email, name, profileImage: u.image_url },
         { new: true, upsert: true, setDefaultsOnInsert: true },
       );
+      console.log(`User updated and synced to MongoDB: ${name} (${email})`);
     }
 
-
     if (eventType === 'user.deleted') {
-      await User.findOneAndDelete({ clerkId: eventType.data.id });
+      await User.findOneAndDelete({ clerkId: u.id });
+      console.log(`User deleted from MongoDB: ${u.id}`);
     }
 
     return res.status(200).json({
