@@ -1,4 +1,4 @@
-import User from '../models/User.js';
+import User from '../model/User.model.js';
 
 
 // Test route to check MongoDB write capabilities
@@ -9,7 +9,7 @@ export const testCreateUserHandler = async (req, res) => {
     // Generate dummy user data matching your schema fields
     const dummyData = {
       clerkId: `user_test_${randomNum}`,
-      email: `testuser_${randomNum}@example.com`,
+      email: `testUser_${randomNum}@example.com`,
       name: `Test User ${randomNum}`,
       profileImage: 'https://img.clerk.com/default-profile.png',
     };

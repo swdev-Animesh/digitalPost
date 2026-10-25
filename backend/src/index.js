@@ -13,7 +13,7 @@ import { initHealthCheckCron } from './lib/cron.js';
 
 import clerkWebhookHandler from './webhook/clerk.webhook.js';
 
-import testRoutes from './routes/testRoutes.routes.js';
+import  testCreateUserHandler  from './routes/testRoutes.routes.js';
 
 dotenv.config();
 
@@ -50,7 +50,7 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.use('/api/test', testRoutes);
+app.use('/api/test', testCreateUserHandler );
 
 //code for serving files static docker and render 
 // 1. Serve static files compiled by React
