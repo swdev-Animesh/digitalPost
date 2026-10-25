@@ -16,9 +16,9 @@ export const clerkWebhookHandler = async (req, res) => {
         }
 
         // 2. Ensure webhook secret exists
-        const secret = process.env.CLERK_SECRET_KEY;
+        const secret = process.env.CLERK_WEBHOOK_SECRET;
         if (!secret) {
-            console.error('Error: CLERK_SECRET_KEY is missing in environment variables');
+            console.error('Error: CLERK_WEBHOOK_SECRET is missing in environment variables');
             return res.status(500).json({ success: false, message: 'Webhook secret not configured' });
         }
 
