@@ -23,26 +23,46 @@ export const clerkWebhookHandler = async (req, res) => {
     // throws if the signature is wrong or the body was tampered with; only then do we trust evt.
     const evt = await verifyWebhook(request, { signingSecret });
 
-    if (evt.type === "user.created" || evt.type === "user.updated") {
-      const u = evt.data;
+    console.log("Webhook verified successfully:", evt);
+    
+    const eventType = evt.type;
+    const u = evt.data.object;
 
-      const email =
-        u.email_addresses?.find((e) => e.id === u.primary_email_address_id)?.email_address ??
-        u.email_addresses?.[0]?.email_address;
+    console.log(`Event Type: ${eventType}`);
 
-      const fullName =
-        [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username || email?.split("@")[0];
+    if (eventType === "user.created" || eventType === "user.updated") {
+            const email =
+                u.email_addresses?.find((e) => e.id === u.primary_email_address_id)?.email_address ??
+                u.email_addresses?.[0]?.email_address;
 
-      await User.findOneAndUpdate(
-        { clerkId: u.id },
-        { clerkId: u.id, email, fullName, profilePic: u.image_url },
-        { new: true, upsert: true, setDefaultsOnInsert: true },
-      );
-    }
+            const fullName =
+                [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username || email?.split("@")[0];
 
-    if (evt.type === "user.deleted") {
-      if (evt.data.id) await User.findOneAndDelete({ clerkId: evt.data.id });
-    }
+            // Modern Mongoose: options are cleaner, upsert/new are standard
+            await User.findOneAndUpdate(
+                { clerkId: u.id },
+                { 
+                    clerkId: u.id, 
+                    email, 
+                    fullName, 
+                    profilePic: u.image_url 
+                },
+                { 
+                    returnDocument: 'after', // Replaces old { new: true } terminology cleanly
+                    upsert: true, 
+                    setDefaultsOnInsert: true 
+                }
+            );
+            console.log(`Successfully synced user to MongoDB: ${fullName} (${email})`);
+        }
+
+        if (eventType === "user.deleted") {
+            if (u?.id) {
+                // Modern Mongoose: findOneAndDelete works directly
+                await User.findOneAndDelete({ clerkId: u.id });
+                console.log(`Successfully deleted user from MongoDB: ${u.id}`);
+            }
+        }
 
     res.status(200).json({ received: true });
   } catch (error) {
