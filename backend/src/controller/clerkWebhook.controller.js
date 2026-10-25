@@ -51,6 +51,8 @@ import { verifyWebhook } from "@clerk/backend/webhooks";
 
  export const clerkWebhookHandler = async (req, res) => {
   try {
+
+    console.log("Received Clerk webhook event:");
     const signingSecret = process.env.CLERK_WEBHOOK_SECRET;
     if (!signingSecret) {
       res.status(503).json({ message: "Webhook secret is not provided" });
