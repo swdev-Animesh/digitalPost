@@ -10,11 +10,16 @@ import { clerkMiddleware, clerkClient, getAuth } from '@clerk/express'
 
 import { initHealthCheckCron } from './lib/cron.js'; 
 
+import {clerkWebhookHandler} from './webhook/clerk.webhook.js';
+
 dotenv.config();
 
 const app = express();
 
 const publicDir = path.join(process.cwd(), "public");
+
+app.use("/api/webhook",express.raw({type:"application/json"}),clerkWebhookHandler);
+
 
 app.use(clerkMiddleware());
 app.use(express.json());
@@ -22,7 +27,6 @@ app.use(cors({
     origin: process.env.FRONTEND_URL,
     credentials: true
 }));
-
 
 
 
