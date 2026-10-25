@@ -10,7 +10,7 @@ import { clerkMiddleware, clerkClient, getAuth } from '@clerk/express'
 
 import { initHealthCheckCron } from './lib/cron.js'; 
 
-import {clerkWebhookHandler} from './webhook/clerk.webhook.js';
+import clerkWebhookHandler from './webhook/clerk.webhook.js';
 
 dotenv.config();
 

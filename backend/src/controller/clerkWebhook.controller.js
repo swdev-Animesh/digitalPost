@@ -1,9 +1,10 @@
-import User from '../models/user.model.js';
+import User from '../model/User.model.js';
 import { verifyWebhook } from "@clerk/backend/webhooks";
 
 
 export const clerkWebhookHandler = async (req, res) => {
     try{
+      console.log('Received Clerk webhook event:', req.body);
         const secret = process.env.CLERK_WEBHOOK_SECRET;
 
         if(!secret){
