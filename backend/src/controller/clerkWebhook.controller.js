@@ -2,7 +2,6 @@
 import User from "../model/User.model.js";
 import { verifyWebhook } from "@clerk/backend/webhooks";
 
-const router = express.Router();
 
 export const clerkWebhookHandler = async (req, res) => {
   try {
