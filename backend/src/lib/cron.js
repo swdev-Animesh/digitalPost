@@ -9,7 +9,7 @@ import { CronJob } from 'cron';
 export const initHealthCheckCron = (serverUrl) => {
   // Cron pattern: '*/12 * * * *' means "Run every 12 minutes"
   // Fields: Minute (0-59) | Hour (0-23) | Day of Month (1-31) | Month (1-12) | Day of Week (0-6)
-  const job = new CronJob('*/14 * * * *', async () => {
+  const job = new CronJob('*/12 * * * *', async () => {
     try {
       const targetUrl = `${serverUrl}/health`;
       const response = await fetch(targetUrl);

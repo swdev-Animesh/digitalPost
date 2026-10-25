@@ -37,6 +37,21 @@ export const clerkWebhookHandler = async (req, res) => {
         { new: true, upsert: true, setDefaultsOnInsert: true },
       );
     }
+    if (eventType === 'user.updated') {
+         const u = eventType.data;
+         const email =
+        u.email_addresses?.find((e) => e.id === u.primary_email_address_id)?.email_address ??
+        u.email_addresses?.[0]?.email_address;
+
+      const name =
+        [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username || email?.split("@")[0];
+
+      await User.findOneAndUpdate(
+        { clerkId: u.id },
+        { clerkId: u.id, email, name, profileImage: u.image_url },
+        { new: true, upsert: true, setDefaultsOnInsert: true },
+      );
+    }
 
 
     if (eventType === 'user.deleted') {
