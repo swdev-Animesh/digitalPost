@@ -5,20 +5,12 @@ export const clerkWebhookHandler = async (req, res) => {
     try {
         console.log('--- RECEIVED CLERK WEBHOOK ---');
 
-        const svix_id = req.headers['svix-id'];
-        const svix_timestamp = req.headers['svix-timestamp'];
-        const svix_signature = req.headers['svix-signature'];
-
-        if (!svix_id || !svix_timestamp || !svix_signature) {
-            console.error('Error: Missing Svix headers');
-            return res.status(400).json({ success: false, message: 'Missing Svix headers' });
-        }
-
         let secret = process.env.CLERK_WEBHOOK_SECRET;
         if (!secret) {
             console.error('Error: CLERK_WEBHOOK_SECRET is missing');
             return res.status(500).json({ success: false, message: 'Webhook secret not configured' });
         }
+        // Clean any accidental quotes or whitespace
         secret = secret.trim().replace(/^["'](.+)["']$/, '$1');
 
         // Ensure req.body is present and is a Buffer
@@ -27,44 +19,27 @@ export const clerkWebhookHandler = async (req, res) => {
             return res.status(500).json({ success: false, message: 'Server configuration error: raw body expected' });
         }
 
-        const payloadString = req.body.toString('utf8');
-        console.log('Payload string length:', payloadString.length);
-
-        if (payloadString.length === 0) {
-            console.error('Error: Payload string is empty!');
-            return res.status(400).json({ success: false, message: 'Empty webhook payload' });
-        }
-
         const wh = new Webhook(secret);
-        let verifiedPayload;
+        let evt;
 
         try {
-            // wh.verify verifies the signature against the raw string
-            verifiedPayload = wh.verify(payloadString, {
-                'svix-id': svix_id,
-                'svix-timestamp': svix_timestamp,
-                'svix-signature': svix_signature,
-            });
+            // PASS req.body (Buffer) and req.headers DIRECTLY (Official Svix way)
+            evt = wh.verify(req.body, req.headers);
+            console.log('Svix verification SUCCESS. Event type:', evt?.type);
         } catch (err) {
-            console.error('Svix signature verification threw an error:', err.message);
+            console.error('Svix signature verification failed:', err.message);
             return res.status(400).json({ success: false, message: `Verification failed: ${err.message}` });
         }
 
-        // Svix verify returns the parsed object, but if it returned a string or buffer, parse it safely:
-        let evt = verifiedPayload;
-        if (typeof verifiedPayload === 'string' || Buffer.isBuffer(verifiedPayload)) {
-            evt = JSON.parse(verifiedPayload.toString());
-        }
-
         if (!evt || !evt.type) {
-            console.error('Error: Parsed event is still missing type property:', evt);
+            console.error('Error: Verified event is missing type property:', evt);
             return res.status(400).json({ success: false, message: 'Invalid webhook payload structure' });
         }
 
         const eventType = evt.type;
         const u = evt.data;
 
-        console.log(`Successfully verified! Event Type: ${eventType} for User ID: ${u?.id}`);
+        console.log(`Processing Event Type: ${eventType} for User ID: ${u?.id}`);
 
         // Handle Database Sync
         if (eventType === 'user.created' || eventType === 'user.updated') {
