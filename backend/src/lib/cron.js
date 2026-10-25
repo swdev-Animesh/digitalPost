@@ -15,12 +15,13 @@ export const initHealthCheckCron = (serverUrl) => {
       const response = await fetch(targetUrl);
       
       if (response.ok) {
+        const data = await response.json();
         console.log(`Cron jobs logs start`);
         console.log(`[Cron] Health check ping successful: ${targetUrl} at ${new Date().toISOString()}`);
-        console.log(`[Cron] Response status: ${response.status}`);
-        console.log(`[Cron] Response body: ${ response.message }`);
-        console.log(`[Cron] Response timestamp: ${ response.timestamp }`);
-        console.log(`[Cron] Response body: ${ response.environment }`);
+        console.log(`[Cron] Response status: ${data.status}`);
+        console.log(`[Cron] Response body: ${ data.message }`);
+        console.log(`[Cron] Response timestamp: ${ data.timestamp }`);
+        console.log(`[Cron] Response body: ${ data.environment }`);
         console.log(`Cron jobs logs end`);
       } else {
         console.warn(`[Cron] Health check responded with status ${response.status} at ${new Date().toISOString()}`);
