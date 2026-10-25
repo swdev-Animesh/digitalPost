@@ -46,7 +46,7 @@
 // };
 
 
-import User from "../models/user.model.js";
+import User from "../model/User.model.js";
 import { verifyWebhook } from "@clerk/backend/webhooks";
 
  export const clerkWebhookHandler = async (req, res) => {
