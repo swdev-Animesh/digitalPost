@@ -21,43 +21,50 @@ export const clerkWebhookHandler = async (req, res) => {
         }
         secret = secret.trim().replace(/^["'](.+)["']$/, '$1');
 
-        if (!Buffer.isBuffer(req.body)) {
-            console.error('Error: req.body is not a Buffer.');
+        // Ensure req.body is present and is a Buffer
+        if (!req.body || !Buffer.isBuffer(req.body)) {
+            console.error('Error: req.body is missing or not a Buffer.');
             return res.status(500).json({ success: false, message: 'Server configuration error: raw body expected' });
         }
 
         const payloadString = req.body.toString('utf8');
+        console.log('Payload string length:', payloadString.length);
 
-        // --- DEBUG LOGS FOR VERIFICATION ---
-        console.log('Verifying with Svix...');
-        console.log('Payload length:', payloadString.length);
-        console.log('Headers:', { svix_id, svix_timestamp, svix_signature });
+        if (payloadString.length === 0) {
+            console.error('Error: Payload string is empty!');
+            return res.status(400).json({ success: false, message: 'Empty webhook payload' });
+        }
 
         const wh = new Webhook(secret);
-        let evt;
+        let verifiedPayload;
 
         try {
-            evt = wh.verify(payloadString, {
+            // wh.verify verifies the signature against the raw string
+            verifiedPayload = wh.verify(payloadString, {
                 'svix-id': svix_id,
                 'svix-timestamp': svix_timestamp,
                 'svix-signature': svix_signature,
             });
-            console.log('Svix verification SUCCESS. Event object:', evt);
         } catch (err) {
             console.error('Svix signature verification threw an error:', err.message);
             return res.status(400).json({ success: false, message: `Verification failed: ${err.message}` });
         }
 
-        // Safety check if evt is still undefined
+        // Svix verify returns the parsed object, but if it returned a string or buffer, parse it safely:
+        let evt = verifiedPayload;
+        if (typeof verifiedPayload === 'string' || Buffer.isBuffer(verifiedPayload)) {
+            evt = JSON.parse(verifiedPayload.toString());
+        }
+
         if (!evt || !evt.type) {
-            console.error('Error: Verified event is missing type property:', evt);
+            console.error('Error: Parsed event is still missing type property:', evt);
             return res.status(400).json({ success: false, message: 'Invalid webhook payload structure' });
         }
 
         const eventType = evt.type;
         const u = evt.data;
 
-        console.log(`Processing Event Type: ${eventType} for User ID: ${u?.id}`);
+        console.log(`Successfully verified! Event Type: ${eventType} for User ID: ${u?.id}`);
 
         // Handle Database Sync
         if (eventType === 'user.created' || eventType === 'user.updated') {

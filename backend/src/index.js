@@ -1,7 +1,6 @@
 //////////////////packages and their functions imports
 import express from "express";
 import dotenv from "dotenv";
-import mongoose from "mongoose";
 import cors from "cors";
 import path from "path";
 import fs from "fs";
@@ -21,18 +20,18 @@ import  testCreateUserHandler  from './routes/testRoutes.routes.js';
 dotenv.config();
 const app = express();
 
-
-////additional setup for serving static files in production
-const publicDir = path.join(process.cwd(), "public");
-
 /////////////////////////middleware for clerk webhook and other middlewares
-app.use("/api/webhook",express.raw({type:"application/json"}),clerkWebhookHandler);
+app.use("/api/webhook",express.raw({ type: 'application/json' }),clerkWebhookHandler);
 app.use(clerkMiddleware());
 app.use(express.json());
 app.use(cors({
     origin: process.env.FRONTEND_URL,
     credentials: true
 }));
+
+
+////additional setup for serving static files in production
+const publicDir = path.join(process.cwd(), "public");
 
 /////////////////////////////////////////////routes and health check endpoint
 // app.get("/",(req,res)=>{
