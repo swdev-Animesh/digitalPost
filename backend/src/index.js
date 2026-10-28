@@ -5,6 +5,7 @@ import cors from "cors";
 import path from "path";
 import fs from "fs";
 import { clerkMiddleware, clerkClient, getAuth } from '@clerk/express'
+import { app, server } from "./lib/socket.js"
 
 //library and 3rd party imports
 import ConnectDb from "./lib/DbConnect.js";
@@ -15,10 +16,12 @@ import clerkWebhookHandler from './webhook/clerk.webhook.js';
 
 ///routes imports
 import  testCreateUserHandler  from './routes/testRoutes.routes.js';
+import messageRoutes from './routes/messages.routes.js';
+
 
 //////setting up packages and middlewares
 dotenv.config();
-const app = express();
+
 
 /////////////////////////middleware for clerk webhook and other middlewares
 app.use("/api/webhook",express.raw({ type: 'application/json' }),clerkWebhookHandler);
@@ -50,6 +53,7 @@ app.get("/health", (req, res) => {
 
 app.use('/api/test', testCreateUserHandler );
 
+app.use("/messages",messageRoutes);
 ////////////////////////////production build of react app in backend
 //code for serving files static docker and render 
 //for production build of react app in backend
@@ -62,9 +66,10 @@ if (fs.existsSync(publicDir)) {
 }
 
 /////////////////////////////server listen and db connection
-app.listen(process.env.PORT || 3000,async ()=>{
+server.listen(process.env.PORT || 3000,async ()=>{
     try{
         await ConnectDb();
+        console.log(process.env.PORT);
          if(process.env.NODE_ENV === 'production'){
             const serverUrl = process.env.FRONTEND_URL;
                  initHealthCheckCron(serverUrl);
