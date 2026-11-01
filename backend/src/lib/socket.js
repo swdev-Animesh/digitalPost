@@ -11,12 +11,14 @@ const io = new Server( { cors : {
    origin: [ allowedOrigin ] ,
 }});
 
+const userSocketMap = {};
+
 function getReceiverSocketId(userId) {
   return userSocketMap[userId];
 }
 
 
-const userSocketMap = {};
+
 
 io.on("connection", (socket) => {
   const userId = socket.handshake.query.userId;
